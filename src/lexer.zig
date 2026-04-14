@@ -32,8 +32,8 @@ pub const Lexer = struct {
             .dec => try self.commandHandler(&token.diff, '-', '+'),
             .next => try self.commandHandler(&token.diff, '>', '<'),
             .prev => try self.commandHandler(&token.diff, '<', '>'),
-            .print => try self.commandHandler(&token.diff, '.', 0),
-            .input => try self.commandHandler(&token.diff, ',', 0),
+            .print => try self.commandHandler(&token.diff, '.', null),
+            .input => try self.commandHandler(&token.diff, ',', null),
             else => {
                 // The lexer doesn't handle '[' and ']'.
             },
@@ -51,8 +51,8 @@ pub const Lexer = struct {
         }
     }
 
-    fn commandHandler(self: *Self, diff: *i16, plusDiffCommand: u8,
-        minusDiffCommand: u8) LexerError!void
+    fn commandHandler(self: *Self, diff: *i16, plusDiffCommand: ?u8,
+        minusDiffCommand: ?u8) LexerError!void
     {
         while (true) {
             const byte = self.peek() catch |err| {
@@ -63,9 +63,9 @@ pub const Lexer = struct {
                         LexerError.ReadFailed;
             };
 
-            if (plusDiffCommand == byte) {
+            if (plusDiffCommand != null and plusDiffCommand == byte) {
                 diff.* += 1;
-            } else if (minusDiffCommand == byte) {
+            } else if (minusDiffCommand != null and minusDiffCommand == byte) {
                 diff.* -= 1;
             } else {
                 break;
