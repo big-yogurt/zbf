@@ -67,16 +67,20 @@ pub const Interpreter = struct{
                 self.cellCursor -= command.diff;
             },
             .print => {
-                self.stdout.interface.writeByte(self.tape[@as(usize, @abs(self.cellCursor))]) catch |err| switch (err) {
-                    std.io.Writer.Error.WriteFailed => return InterpreterError.CannotPrint,
-                };
+                for (0..@as(usize, @intCast(command.diff))) |_| {
+                    self.stdout.interface.writeByte(self.tape[@as(usize, @abs(self.cellCursor))]) catch |err| switch (err) {
+                        std.io.Writer.Error.WriteFailed => return InterpreterError.CannotPrint,
+                    };
+                }
             },
             .input => {
-                self.tape[@as(usize, @abs(self.cellCursor))] = self.stdin.interface
-                    .takeByte() catch |err| switch (err) {
-                        std.io.Reader.Error.EndOfStream => return,
-                        std.io.Reader.Error.ReadFailed => return InterpreterError.CannotReadInput,
-                    };
+                for (0..@as(usize, @intCast(command.diff))) |_| {
+                    self.tape[@as(usize, @abs(self.cellCursor))] = self.stdin.interface
+                        .takeByte() catch |err| switch (err) {
+                            std.io.Reader.Error.EndOfStream => return,
+                            std.io.Reader.Error.ReadFailed => return InterpreterError.CannotReadInput,
+                        };
+                }
             },
             .loopBegin => {
                 if (self.tape[@as(usize, @abs(self.cellCursor))] == 0) {
